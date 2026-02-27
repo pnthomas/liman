@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCC License Coordinator Dashboard</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="container">
+    <div class="table-section">
+        <table id="licenseTable">
+            <thead>
+                <tr>
+                    <th style="width: 85px;">Callsign</th>
+                    <th style="width: 110px;">Auth Dates</th>
+                    <th style="width: 140px;">Emissions</th>
+                    <th style="width: 100px;">Power (ERP)</th>
+                    <th>Station Location</th>
+                    <th style="width: 160px;">Frequency (MHz)</th>
+                    <th style="width: 240px;">Spectrum Visual (300MHz - 5GHz)</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+    <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

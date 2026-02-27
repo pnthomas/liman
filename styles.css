@@ -1,0 +1,128 @@
+ :root {
+     --fcc-blue: #003366;
+     --spectrum-blue: #3498db;
+     --highlight: #fff9c4;
+     --text-main: #2c3e50;
+ }
+
+ body, html {
+     margin: 0;
+     padding: 0;
+     height: 100%;
+     font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+     color: var(--text-main);
+ }
+
+ .container {
+     display: flex;
+     flex-direction: column;
+     height: 100vh;
+ }
+
+ /* Table Section */
+ .table-section {
+     height: 50%;
+     overflow-y: auto;
+     border-bottom: 2px solid #bdc3c7;
+     background: #fff;
+ }
+
+ table {
+     width: 100%;
+     border-collapse: collapse;
+     table-layout: fixed;
+     border-spacing: 0;
+ }
+
+ th {
+     background: var(--fcc-blue);
+     color: white;
+     position: sticky;
+     top: 0;
+     z-index: 10;
+     padding: 12px 10px;
+     text-align: left;
+     font-size: 11px;
+     text-transform: uppercase;
+     letter-spacing: 0.5px;
+ }
+
+ td {
+     padding: 10px;
+     border-bottom: 1px solid #edf2f7;
+     font-size: 11px;
+     vertical-align: middle;
+ }
+
+ tr.active-row {
+     background-color: var(--highlight) !important;
+ }
+
+ tr:hover {
+     background-color: #f8fafc;
+     cursor: pointer;
+ }
+
+ .callsign {
+     font-weight: bold;
+     font-family: 'Courier New', Courier, monospace;
+     color: #e67e22;
+     font-size: 13px;
+ }
+
+ .freq-numbers {
+     font-family: 'Courier New', Courier, monospace;
+     font-weight: 600;
+     color: #2980b9;
+     line-height: 1.4;
+ }
+
+ /* Spectrum Visual Styling */
+ .spectrum-wrapper {
+     width: 100%;
+     max-width: 220px;
+ }
+
+ .spectrum-track {
+     width: 100%;
+     height: 18px;
+     background: #ffffff;
+     border: 1px solid #cbd5e0;
+     position: relative;
+     border-radius: 2px;
+     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+ }
+
+ .spectrum-bar {
+     position: absolute;
+     height: 100%;
+     background: var(--spectrum-blue);
+     opacity: 0.75;
+     border-left: 1px solid #1f6391;
+     border-right: 1px solid #1f6391;
+     box-sizing: border-box;
+ }
+
+ .scale-label {
+     display: flex;
+     justify-content: space-between;
+     font-size: 9px;
+     color: #94a3b8;
+     margin-top: 3px;
+     font-weight: 600;
+ }
+
+ /* Map Section */
+ #map {
+     height: 50%;
+     width: 100%;
+     background: #f1f5f9;
+ }
+
+ .tooltip-custom {
+     font-size: 12px;
+     font-weight: bold;
+     border: none;
+     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+ }
+

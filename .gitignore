@@ -14,3 +14,5 @@
      grantpdfs/
      node_modules/
      .DS_Store
+grantpdfs/
+licenses.csv

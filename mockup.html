@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCC License Coordinator Dashboard</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        :root {
+            --fcc-blue: #003366;
+            --spectrum-blue: #3498db;
+            --highlight: #fff9c4;
+            --text-main: #2c3e50;
+        }
+
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; color: var(--text-main); }
+        
+        .container { display: flex; flex-direction: column; height: 100vh; }
+
+        /* Table Section */
+        .table-section { height: 50%; overflow-y: auto; border-bottom: 2px solid #bdc3c7; background: #fff; }
+        
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; border-spacing: 0; }
+        th { background: var(--fcc-blue); color: white; position: sticky; top: 0; z-index: 10; padding: 12px 10px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 10px; border-bottom: 1px solid #edf2f7; font-size: 11px; vertical-align: middle; }
+        
+        tr.active-row { background-color: var(--highlight) !important; }
+        tr:hover { background-color: #f8fafc; cursor: pointer; }
+
+        .callsign { font-weight: bold; font-family: 'Courier New', Courier, monospace; color: #e67e22; font-size: 13px; }
+        .freq-numbers { font-family: 'Courier New', Courier, monospace; font-weight: 600; color: #2980b9; line-height: 1.4; }
+
+        /* Spectrum Visual Styling */
+        .spectrum-wrapper { width: 100%; max-width: 220px; }
+        .spectrum-track { width: 100%; height: 18px; background: #ffffff; border: 1px solid #cbd5e0; position: relative; border-radius: 2px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
+        .spectrum-bar { position: absolute; height: 100%; background: var(--spectrum-blue); opacity: 0.75; border-left: 1px solid #1f6391; border-right: 1px solid #1f6391; box-sizing: border-box; }
+        .scale-label { display: flex; justify-content: space-between; font-size: 9px; color: #94a3b8; margin-top: 3px; font-weight: 600; }
+
+        /* Map Section */
+        #map { height: 50%; width: 100%; background: #f1f5f9; }
+
+        .tooltip-custom { font-size: 12px; font-weight: bold; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="table-section">
+        <table id="licenseTable">
+            <thead>
+                <tr>
+                    <th style="width: 85px;">Callsign</th>
+                    <th style="width: 110px;">Auth Dates</th>
+                    <th style="width: 140px;">Emissions</th>
+                    <th style="width: 100px;">Power (ERP)</th>
+                    <th>Station Location</th>
+                    <th style="width: 160px;">Frequency (MHz)</th>
+                    <th style="width: 240px;">Spectrum Visual (300MHz - 5GHz)</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+    <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // 1. DATASET FROM CSV
+    const licenseData = [
+        {
+            callsign: "WA9XKV",
+            eff: "Dec 16 2025",
+            exp: "Jun 16 2026",
+            emissions: "20M0Q1N",
+            power: "8500 W",
+            location: "Telegraphi city, CA; Black Rock Desert, NV; Anderson, CA; Little Quien Sabe, CA",
+            coords: [[37.9491, -120.7955], [40.8447, -119.1786], [37.2108, -121.6497], [36.8125, -121.1833]],
+            freqs: [[3300, 3500]],
+            freqLabel: "3300 - 3500"
+        },
+        {
+            callsign: "WA9XTB",
+            eff: "Feb 19 2026",
+            exp: "July 31 2026",
+            emissions: "8M00D1D, 125KG1D",
+            power: "2W - 39.85W",
+            location: "Black Rock Desert, NV (Sites 1-9)",
+            coords: [[40.8447, -119.1786]],
+            freqs: [[480, 490], [670, 690], [1710, 1720], [1850, 1860], [1930, 1940], [2110, 2120], [3720, 3740]],
+            freqLabel: "480 - 3740 (Multiple)"
+        },
+        {
+            callsign: "WA9XTD",
+            eff: "Feb 20 2026",
+            exp: "Mar 01 2026",
+            emissions: "8M00D1D, 125KG1D, 6M00F3F",
+            power: "1W - 31W",
+            location: "Oahu, HI (Sites 1-5)",
+            coords: [[21.4911, -158.1050]],
+            freqs: [[480, 490], [1710, 1720], [1850, 1860], [1930, 1940], [2110, 2120], [3720, 3730], [5850, 5925]],
+            freqLabel: "480 - 5925 (Multiple)"
+        }
+    ];
+
+    // 2. INITIALIZE MAP
+    const map = L.map('map').setView([38.5, -110], 4);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '©OpenStreetMap'
+    }).addTo(map);
+
+    const markers = {};
+
+    // 3. SPECTRUM VISUAL LOGIC
+    function getSpectrumHtml(freqRanges) {
+        const min = 300;
+        const max = 5000;
+        const total = max - min;
+        
+        let bars = freqRanges.map(range => {
+            const start = Math.max(0, ((range[0] - min) / total) * 100);
+            const width = Math.min(100 - start, ((range[1] - range[0]) / total) * 100);
+            return `<div class="spectrum-bar" style="left: ${start}%; width: ${width}%;"></div>`;
+        }).join('');
+
+        return `
+            <div class="spectrum-wrapper">
+                <div class="spectrum-track">${bars}</div>
+                <div class="scale-label"><span>300M</span><span>2.6G</span><span>5G</span></div>
+            </div>
+        `;
+    }
+
+    // 4. POPULATE UI
+    const tableBody = document.querySelector('#licenseTable tbody');
+
+    licenseData.forEach((license) => {
+        const row = document.createElement('tr');
+        row.id = `row-${license.callsign}`;
+        row.innerHTML = `
+            <td class="callsign">${license.callsign}</td>
+            <td>${license.eff}<br><span style="color:#e53e3e; font-size:10px;">Exp: ${license.exp}</span></td>
+            <td>${license.emissions}</td>
+            <td>${license.power}</td>
+            <td style="font-size: 10px;">${license.location}</td>
+            <td class="freq-numbers">${license.freqLabel}</td>
+            <td>${getSpectrumHtml(license.freqs)}</td>
+        `;
+        
+        row.onclick = () => highlightLicense(license.callsign, true);
+        tableBody.appendChild(row);
+
+        license.coords.forEach(coord => {
+            const marker = L.circleMarker(coord, {
+                color: '#2c3e50', weight: 1, fillColor: '#e74c3c', fillOpacity: 0.9, radius: 7
+            }).addTo(map);
+
+            marker.bindTooltip(license.callsign, { className: "tooltip-custom" });
+            
+            marker.on('click', (e) => {
+                L.DomEvent.stopPropagation(e);
+                highlightLicense(license.callsign, false);
+                document.getElementById(`row-${license.callsign}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+
+            if (!markers[license.callsign]) markers[license.callsign] = [];
+            markers[license.callsign].push(marker);
+        });
+    });
+
+    // 5. HIGHLIGHT & SYNC
+    function highlightLicense(callsign, moveMap) {
+        document.querySelectorAll('tr').forEach(r => r.classList.remove('active-row'));
+        Object.values(markers).flat().forEach(m => m.setStyle({ fillColor: '#e74c3c', radius: 7 }));
+
+        const row = document.getElementById(`row-${callsign}`);
+        row.classList.add('active-row');
+
+        const activeMarkers = markers[callsign];
+        activeMarkers.forEach(m => m.setStyle({ fillColor: '#3498db', radius: 10 }));
+
+        if (moveMap) {
+            const group = new L.featureGroup(activeMarkers);
+            map.fitBounds(group.getBounds(), { padding: [100, 100], maxZoom: 8 });
+        }
+    }
+</script>
+
+</body>
+</html>

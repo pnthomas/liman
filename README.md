@@ -9,11 +9,13 @@
 
 ### Files
 
-- `index.html` – main dashboard (table + map).
+- `index.html` – main dashboard (table + map) with company dropdown.
 - `styles.css` – layout and styling.
-- `app.js` – CSV loading, parsing, rendering, and table↔map interaction.
-- `licenses.sample.csv` – **public demo data** with synthetic/example licenses.
-- `licenses.csv` – **real data**, used locally only and **ignored by git**.
+- `app.js` – CSV loading, parsing, rendering, company selector, and table↔map interaction.
+- `companies.json` – list of company (folder) names shown in the top-left dropdown; edit to add or remove companies.
+- `licenses.sample.csv` – **public demo data** with synthetic/example licenses (used when company is `"demo"`).
+- `licenses.csv` – **real data** at project root, used locally only and **ignored by git** (legacy single-CSV mode).
+- `grantpdfs/{company}/` – per-company folders (e.g. `grantpdfs/licensee1/`, `grantpdfs/licensee2/`); each contains `licenses.csv` and optionally PDFs. Ignored by git.
 - `PLAN.md` – project plan and phase breakdown.
 
 ### Running the dashboard locally
@@ -31,22 +33,14 @@
    http://localhost:8000/index.html
    ```
 
-3. You should see the table and map populated from `licenses.csv` (if present) or you can use the sample data below.
+3. Use the **Company** dropdown at the top-left to select which company's licenses to view. The app loads data from `grantpdfs/{company}/licenses.csv` for that company. Selection is remembered in the browser (localStorage).
 
-### Using the sample data (public-friendly)
+### Multi-company and sample data
 
-For people cloning the repo or when you don’t want to expose real license data:
-
-1. Copy the sample CSV to `licenses.csv`:
-
-   ```bash
-   cd /Users/pthomas/src/liman
-   cp licenses.sample.csv licenses.csv
-   ```
-
-2. Start the local server and open the dashboard as described above.
-
-The sample file `licenses.sample.csv` contains only synthetic/example licenses and is safe to keep in a public repository. The real `licenses.csv` and any `grantpdfs/` are kept local and are **not** tracked by git.
+- **companies.json** lists the company names (folder names) shown in the dropdown, e.g. `["demo", "licensee1", "licensee2"]`. Add or remove names to match your `grantpdfs/` subfolders.
+- Each company has its own folder under `grantpdfs/` with a `licenses.csv` inside it, e.g. `grantpdfs/licensee1/licenses.csv`, `grantpdfs/licensee2/licenses.csv`.
+- The special company **demo** uses the built-in `licenses.sample.csv` at the project root (no need to create `grantpdfs/demo/`). Include `"demo"` in the list and select it in the dropdown to view sample data after cloning.
+- The sample file is safe for public repos; `grantpdfs/` and root `licenses.csv` are **not** tracked by git.
 
 ### Phases (high level)
 
@@ -56,11 +50,10 @@ The sample file `licenses.sample.csv` contains only synthetic/example licenses a
     - Spectrum visual from 300 MHz to 5 GHz.
     - Table↔map highlighting.
 - **Phase 2 – UX, launch flow, and visualization enhancements**
-  - Row expansion, better map grouping, responsive layout, convenient launch (single command/double-click), clickable column-header sorting, etc.
+  - Row expansion, better map grouping, responsive layout, convenient launch (single command/double-click), clickable column-header sorting, **multi-company dropdown**, etc.
 - **Phase 3 – Data automation (Modules A & B)**
   - Python tooling to:
     - Query the FCC Experimental Licensing System (ELS) search page.
     - Download new grant PDFs.
     - Extract structured data from PDFs via an LLM using a high-fidelity extraction prompt.
     - Update `licenses.csv` automatically.
-

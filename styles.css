@@ -13,10 +13,49 @@
      color: var(--text-main);
  }
 
+ body {
+     display: flex;
+     flex-direction: column;
+ }
+
+ .dashboard-header {
+     flex-shrink: 0;
+     display: flex;
+     align-items: center;
+     gap: 8px;
+     padding: 8px 12px;
+     background: var(--fcc-blue);
+     color: white;
+ }
+
+ .company-label {
+     font-size: 12px;
+     font-weight: 600;
+     text-transform: uppercase;
+     letter-spacing: 0.5px;
+ }
+
+ .company-select {
+     font-size: 13px;
+     padding: 4px 8px;
+     border-radius: 4px;
+     border: 1px solid rgba(255, 255, 255, 0.4);
+     background: rgba(255, 255, 255, 0.15);
+     color: white;
+     cursor: pointer;
+     min-width: 140px;
+ }
+
+ .company-select option {
+     background: var(--text-main);
+     color: white;
+ }
+
  .container {
      display: flex;
      flex-direction: column;
-     height: 100vh;
+     flex: 1;
+     min-height: 0;
  }
 
  /* Table Section */

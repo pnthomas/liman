@@ -87,11 +87,20 @@ Logical field names used in code (actual CSV headers are FCC-style; `app.js` nor
   - Add error handling if `licenses.csv` is missing or invalid.
   - Consider light filters (by callsign, geography, or frequency band) while keeping a single-screen layout.
   - Gracefully handle screen resizing (responsive layout while preserving the single-screen design).
+- **Spectrum visual refinements**
+  - In the 300 MHz–5 GHz spectrum track, add thin, darker-blue edge bands at the start and end of each licensed range to emphasize band boundaries.
+- **Map labels**
+  - Add small, unobtrusive callsign labels near each map dot:
+    - Either as light gray text always shown, or as labels that appear on hover, to avoid clutter while still making the map legible at a glance.
 - **Sorting**
   - Keep default sort by callsign on initial load.
   - Add clickable column headers so clicking a heading re-sorts the table by that column (toggling ascending/descending), while keeping map highlighting behavior in sync.
 - **Launch flow**
   - Consider how to launch the dashboard more conveniently from the OS GUI or command line (e.g., a single command or double-click that starts the local server and opens the browser).
+- **Multi-company selector**
+  - Dropdown at top-left to switch between license folders (e.g. `grantpdfs/licensee1`, `grantpdfs/licensee2`).
+  - Company list from `companies.json` (array of folder names); each company’s CSV at `grantpdfs/{company}/licenses.csv`.
+  - Persist selected company in `localStorage`; on first load use first company in list if no saved value.
 
 #### Phase 3 – Data automation (Modules A & B)
 

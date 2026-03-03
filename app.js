@@ -1,4 +1,7 @@
+const STORAGE_KEY_COMPANY = "liman_selected_company";
+
 let map;
+let markerLayer;
 let markers = {};
 
 // 1. SPECTRUM VISUAL LOGIC
@@ -138,6 +141,7 @@ function renderLicenses(licenseData) {
     const tableBody = document.querySelector("#licenseTable tbody");
     tableBody.innerHTML = "";
     markers = {};
+    if (markerLayer) markerLayer.clearLayers();
 
     licenseData.forEach((license) => {
         const row = document.createElement("tr");
@@ -162,7 +166,9 @@ function renderLicenses(licenseData) {
                 fillColor: "#e74c3c",
                 fillOpacity: 0.9,
                 radius: 7
-            }).addTo(map);
+            });
+            if (markerLayer) markerLayer.addLayer(marker);
+            else marker.addTo(map);
 
             marker.bindTooltip(license.callsign, { className: "tooltip-custom" });
 
@@ -200,42 +206,88 @@ function highlightLicense(callsign, moveMap) {
     }
 }
 
-// 5. INITIALIZE MAP AND LOAD CSV
+// 5. COMPANY DROPDOWN AND CSV LOADING
+function getCsvUrl(company) {
+    if (company === "demo") return "licenses.sample.csv";
+    return `grantpdfs/${encodeURIComponent(company)}/licenses.csv`;
+}
+
+async function loadCompanyData(company) {
+    const url = getCsvUrl(company);
+    const response = await fetch(url);
+    if (!response.ok) {
+        console.error("Failed to load licenses", url, response.status, response.statusText);
+        return [];
+    }
+    const text = await response.text();
+    const rawRows = parseCsv(text);
+    return rawRows.map((row) => {
+        const coords = parseCoords(row.station_coordinates);
+        const freqs = parseFreqRanges(row.frequency);
+        return {
+            callsign: row.callsign,
+            eff: row.authorization_effective_date,
+            exp: row.authorization_expiry_date,
+            emissions: row.emission_designators,
+            power: row.authorized_power,
+            location: row.station_location,
+            coords,
+            freqs,
+            freqLabel: buildFreqLabel(freqs)
+        };
+    });
+}
+
+async function loadAndRenderCompany(company) {
+    try {
+        const licenseData = await loadCompanyData(company);
+        licenseData.sort((a, b) => a.callsign.localeCompare(b.callsign));
+        renderLicenses(licenseData);
+    } catch (err) {
+        console.error("Error loading company data", company, err);
+    }
+}
+
+// 6. INITIALIZE MAP, COMPANIES, AND LOAD SELECTED COMPANY
 window.addEventListener("DOMContentLoaded", async () => {
     map = L.map("map").setView([38.5, -110], 4);
     L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
         attribution: "©OpenStreetMap"
     }).addTo(map);
+    markerLayer = L.layerGroup().addTo(map);
 
+    const companySelect = document.getElementById("companySelect");
+    if (!companySelect) return;
+
+    let companies = [];
     try {
-        const response = await fetch("licenses.csv");
-        if (!response.ok) {
-            console.error("Failed to load licenses.csv", response.status, response.statusText);
-            return;
+        const res = await fetch("companies.json");
+        if (res.ok) {
+            companies = await res.json();
+            if (!Array.isArray(companies)) companies = [];
         }
-        const text = await response.text();
-        const rawRows = parseCsv(text);
-
-        const licenseData = rawRows.map((row) => {
-            const coords = parseCoords(row.station_coordinates);
-            const freqs = parseFreqRanges(row.frequency);
-            return {
-                callsign: row.callsign,
-                eff: row.authorization_effective_date,
-                exp: row.authorization_expiry_date,
-                emissions: row.emission_designators,
-                power: row.authorized_power,
-                location: row.station_location,
-                coords,
-                freqs,
-                freqLabel: buildFreqLabel(freqs)
-            };
-        });
-
-        licenseData.sort((a, b) => a.callsign.localeCompare(b.callsign));
-        renderLicenses(licenseData);
-    } catch (err) {
-        console.error("Error loading licenses.csv", err);
+    } catch (e) {
+        console.error("Failed to load companies.json", e);
     }
+
+    if (companies.length === 0) {
+        companySelect.innerHTML = '<option value="">No companies</option>';
+        return;
+    }
+
+    companySelect.innerHTML = companies.map((c) => `<option value="${c}">${c}</option>`).join("");
+
+    const saved = localStorage.getItem(STORAGE_KEY_COMPANY);
+    const selected = companies.includes(saved) ? saved : companies[0];
+    companySelect.value = selected;
+    localStorage.setItem(STORAGE_KEY_COMPANY, selected);
+
+    companySelect.addEventListener("change", () => {
+        const company = companySelect.value;
+        localStorage.setItem(STORAGE_KEY_COMPANY, company);
+        loadAndRenderCompany(company);
+    });
+
+    await loadAndRenderCompany(selected);
 });
 

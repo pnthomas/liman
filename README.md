@@ -7,6 +7,8 @@
   - Bottom half: a US map with station locations.
 - It currently loads data from a CSV file and runs entirely in your browser against a tiny local HTTP server.
 
+![screenshot](https://github.com/pnthomas/liman/blob/main/screenshot.png) 
+
 ### Files
 
 - `index.html` – main dashboard (table + map) with company dropdown.

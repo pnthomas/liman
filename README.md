@@ -25,7 +25,7 @@
 1. Open a terminal and start a simple HTTP server in the project folder:
 
    ```bash
-   cd /Users/pthomas/src/liman
+   cd /Users/<user>/src/liman
    python3 -m http.server 8000
    ```
 

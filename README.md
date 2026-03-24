@@ -2,10 +2,7 @@
 
 ### What this is
 
-- **Liman** is a one-screen dashboard for FCC experimental licenses:
-  - Top half: a table of licenses.
-  - Bottom half: a US map with station locations.
-- It currently loads data from a CSV file and runs entirely in your browser against a tiny local HTTP server.
+- **Liman** is a one-screen dashboard for FCC experimental licenses.
 
 ![screenshot](https://github.com/pnthomas/liman/blob/main/screenshot.png) 
 
